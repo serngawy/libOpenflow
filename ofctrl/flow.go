@@ -60,7 +60,7 @@ type FlowAction struct {
 }
 
 type FlowOutput struct {
-	outputType string // Output type: "drop", "toController", "flood", "gotoTable" or "port"
+	outputType string // Output type: "toController", "flood", "gotoTable" or "outPort"
 	outPortNo     uint32 // Output port number
 	tblId      uint8 // goto table id
 }
@@ -425,67 +425,47 @@ func (self *Flow) SetOutputPortAction(portNo uint32) {
 	self.flowOutput.outPortNo = portNo
 }
 
-// Special actions on the flow to set vlan id
-func (self *Flow) SetVlan(vlanId uint16) error {
+func (self *Flow) SetVlan(vlanId uint16) {
 	action := new(FlowAction)
 	action.actionType = "setVlan"
 	action.vlanId = vlanId
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-
-	// Add to the action db
 	self.flowActions = append(self.flowActions, action)
-
-	return nil
 }
 
-// Special actions on the flow to set vlan id
-func (self *Flow) PopVlan() error {
+func (self *Flow) PopVlan() {
 	action := new(FlowAction)
 	action.actionType = "popVlan"
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-
-	// Add to the action db
 	self.flowActions = append(self.flowActions, action)
-
-	return nil
 }
 
-// Special actions on the flow to set mac dest addr
-func (self *Flow) SetMacDa(macDa net.HardwareAddr) error {
+func (self *Flow) SetMacDa(macDa net.HardwareAddr) {
 	action := new(FlowAction)
 	action.actionType = "setMacDa"
 	action.macAddr = macDa
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-
-	// Add to the action db
 	self.flowActions = append(self.flowActions, action)
-
-	return nil
 }
 
-// Special action on the flow to set mac source addr
-func (self *Flow) SetMacSa(macSa net.HardwareAddr) error {
+func (self *Flow) SetMacSa(macSa net.HardwareAddr) {
 	action := new(FlowAction)
 	action.actionType = "setMacSa"
 	action.macAddr = macSa
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-
-	// Add to the action db
 	self.flowActions = append(self.flowActions, action)
-
-	return nil
 }
 
-// Special action on the flow to set an ip field
-func (self *Flow) SetIPField(ip net.IP, field string) error {
+// field should has one of the following values Src or Dst
+func (self *Flow) SetIPField(ip net.IP, field string) {
 	action := new(FlowAction)
 	action.ipAddr = ip
 	if field == "Src" {
@@ -498,15 +478,11 @@ func (self *Flow) SetIPField(ip net.IP, field string) error {
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-
-	// Add to the action db
 	self.flowActions = append(self.flowActions, action)
-
-	return nil
 }
 
-// Special action on the flow to set a L4 field
-func (self *Flow) SetL4Field(port uint16, field string) error {
+// field should has one of the following values TCPSrc, TCPDst, UDPSrc or UDPDst
+func (self *Flow) SetL4Field(port uint16, field string) {
 	action := new(FlowAction)
 	action.l4Port = port
 
@@ -529,15 +505,10 @@ func (self *Flow) SetL4Field(port uint16, field string) error {
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-
-	// Add to the action db
 	self.flowActions = append(self.flowActions, action)
-
-	return nil
 }
 
-// Special actions on the flow to set metadata
-func (self *Flow) SetMetadata(metadata, metadataMask uint64) error {
+func (self *Flow) SetMetadata(metadata, metadataMask uint64) {
 	action := new(FlowAction)
 	action.actionType = "setMetadata"
 	action.metadata = metadata
@@ -545,55 +516,35 @@ func (self *Flow) SetMetadata(metadata, metadataMask uint64) error {
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-
-	// Add to the action db
 	self.flowActions = append(self.flowActions, action)
-
-	return nil
 }
 
-// Special actions on the flow to set vlan id
-func (self *Flow) SetTunnelId(tunnelId uint64) error {
+func (self *Flow) SetTunnelId(tunnelId uint64) {
 	action := new(FlowAction)
 	action.actionType = "setTunnelId"
 	action.tunnelId = tunnelId
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-
-	// Add to the action db
 	self.flowActions = append(self.flowActions, action)
-
-
-	return nil
 }
 
-// Special actions on the flow to set dscp field
-func (self *Flow) SetDscp(dscp uint8) error {
+func (self *Flow) SetDscp(dscp uint8) {
 	action := new(FlowAction)
 	action.actionType = "setDscp"
 	action.dscp = dscp
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-
-	// Add to the action db
 	self.flowActions = append(self.flowActions, action)
-
-	return nil
 }
 
-// unset dscp field
-func (self *Flow) UnsetDscp() error {
+func (self *Flow) UnsetDscp() {
 	self.lock.Lock()
 	defer self.lock.Unlock()
-
-	// Delete to the action from db
 	for idx, act := range self.flowActions {
 		if act.actionType == "setDscp" {
 			self.flowActions = append(self.flowActions[:idx], self.flowActions[idx+1:]...)
 		}
 	}
-
-	return nil
 }
