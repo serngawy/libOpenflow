@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/contiv/libOpenflow/common"
-	"github.com/contiv/libOpenflow/openflow13"
-	"github.com/contiv/libOpenflow/util"
+	"github.com/serngawy/libOpenflow/common"
+	"github.com/serngawy/libOpenflow/openflow13"
+	"github.com/serngawy/libOpenflow/util"
 )
 
 var helloMessage *common.Hello

@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"net"
 
-	"github.com/contiv/libOpenflow/common"
+	"github.com/serngawy/libOpenflow/common"
 )
 
 // ofp_port 1.3

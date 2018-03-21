@@ -1,10 +1,10 @@
-package main
+package libOpenflow
 
 import (
 	"github.com/serngawy/libOpenflow/ofctrl"
 )
 
-func main() {
+func testExample() {
 
 	// Main app
 	var app ofctrl.OfApp

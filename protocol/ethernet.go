@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net"
 
-	"github.com/contiv/libOpenflow/util"
+	"github.com/serngawy/libOpenflow/util"
 )
 
 // see http://en.wikipedia.org/wiki/EtherType
