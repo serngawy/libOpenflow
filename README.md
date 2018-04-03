@@ -42,4 +42,12 @@ ofapp is the interface for Applcations "Consumers" in order to receiv events fro
       // start listening
       ctrler.Listen(":6633")
     }
+# Build:
+
+    To build the binary execute the ./build.sh script, it will create ofctrl binary under the bin directory.
+    To re-download the project dependancies use the following command:
+        $ ./build.sh update 
+
+    Execute the ofctrl binary using the following command:
+        $ sudo ./ofctrl
 
