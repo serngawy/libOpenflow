@@ -33,6 +33,7 @@ func NewSwitch(stream *util.MessageStream, dpid net.HardwareAddr, consumer Consu
 	s.stream = stream
 	s.dpid = dpid
 	s.isConnected = false
+	s.flows = make(map[string]*Flow)
 
 	// Main receive loop for the switch
 	go s.receive()
@@ -50,7 +51,7 @@ func (self *OFSwitch) DPID() net.HardwareAddr {
 }
 
 // Sends an OpenFlow message to the Switch.
-func (self *OFSwitch) send(req util.Message) {
+func (self *OFSwitch) Send(req util.Message) {
 	self.stream.Outbound <- req
 }
 
@@ -64,11 +65,11 @@ func (self *OFSwitch) switchConnected() {
 	self.consumer.SwitchConnected(self)
 
 	// Send new feature request
-	self.send(openflow13.NewFeaturesRequest())
+	self.Send(openflow13.NewFeaturesRequest())
 
 	// FIXME: This is too fragile. Create a periodic timer
 	// Start the periodic echo request loop
-	self.send(openflow13.NewEchoRequest())
+	self.Send(openflow13.NewEchoRequest())
 	self.isConnected = true
 }
 
@@ -109,12 +110,12 @@ func (self *OFSwitch) handleMessages(dpid net.HardwareAddr, msg util.Message) {
 			if err != nil {
 				log.Errorf("Error creating hello message")
 			}
-			self.send(h)
+			self.Send(h)
 
 		case openflow13.Type_EchoRequest:
 			// Send echo reply
 			res := openflow13.NewEchoReply()
-			self.send(res)
+			self.Send(res)
 
 		case openflow13.Type_EchoReply:
 
@@ -125,7 +126,7 @@ func (self *OFSwitch) handleMessages(dpid net.HardwareAddr, msg util.Message) {
 
 				// Send echo request
 				res := openflow13.NewEchoRequest()
-				self.send(res)
+				self.Send(res)
 			}()
 
 		case openflow13.Type_FeaturesRequest:
@@ -186,7 +187,7 @@ func (self *OFSwitch) InstallFlow(flow *Flow) {
 	flowMod.AddInstruction(flow.GetFlowInstructions())
 
 	log.Debugf("Sending ADD flowmod: %+v", flowMod)
-	self.send(flowMod)
+	self.Send(flowMod)
 	self.flows [flow.flowKey()] = flow
 }
 
@@ -203,6 +204,6 @@ func (self *OFSwitch) DeleteFlow(flow Flow) {
 	flowMod.OutGroup = openflow13.OFPG_ANY
 
 	log.Debugf("Sending DELETE flowmod: %+v", flowMod)
-	self.send(flowMod)
+	self.Send(flowMod)
 	delete(self.flows, flow.flowKey())
 }

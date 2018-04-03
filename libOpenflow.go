@@ -1,12 +1,12 @@
-package libOpenflow
+package main
 
 import (
 	"github.com/serngawy/libOpenflow/ofctrl"
 )
 
-func testExample() {
+func main() {
 
-	// Main app
+	// Main app test
 	var app ofctrl.OfApp
 
 	// Create a controller

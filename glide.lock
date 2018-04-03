@@ -1,0 +1,27 @@
+hash: 34816770e3ec91e118b54593c9e9aadae91e9effdd20af15fbf95f1c04ece5c0
+updated: 2018-03-22T16:00:46.412214715-04:00
+imports:
+- name: github.com/contiv/libOpenflow
+  version: cb1835d1c11f5810c2fcf404a6d1eb907168f951
+  subpackages:
+  - util
+- name: github.com/serngawy/libOpenflow
+  version: 7b8febe789c2c0ccd29b8fa9e369e37e3f0b1ff8
+  subpackages:
+  - common
+  - ofctrl
+  - openflow13
+  - protocol
+  - util
+- name: github.com/Sirupsen/logrus
+  version: c155da19408a8799da419ed3eeb0cb5db0ad5dbc
+- name: golang.org/x/crypto
+  version: 81e90905daefcd6fd217b62423c0908922eadb30
+  subpackages:
+  - ssh/terminal
+- name: golang.org/x/sys
+  version: 95c6576299259db960f6c5b9b69ea52422860fce
+  subpackages:
+  - unix
+  - windows
+testImports: []

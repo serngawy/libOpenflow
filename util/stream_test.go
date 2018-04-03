@@ -1,4 +1,4 @@
-package libOpenflow
+package util
 
 import (
 	"io"

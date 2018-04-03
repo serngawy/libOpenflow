@@ -1,0 +1,14 @@
+package: .
+import:
+- package: github.com/Sirupsen/logrus
+  version: ^1.0.5
+- package: github.com/contiv/libOpenflow
+  subpackages:
+  - util
+- package: github.com/serngawy/libOpenflow
+  subpackages:
+  - common
+  - ofctrl
+  - openflow13
+  - protocol
+  - util

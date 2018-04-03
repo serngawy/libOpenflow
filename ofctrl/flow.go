@@ -2,7 +2,6 @@ package ofctrl
 
 import (
 	"encoding/json"
-	"errors"
 	"net"
 	"sync"
 
@@ -75,13 +74,12 @@ type Flow struct {
 }
 
 
-func NewFlow(tblID uint8) Flow {
-	flow := Flow{}
+func NewFlow(tblID uint8) *Flow {
+	flow := new(Flow)
 	flow.TableId = tblID
 	flow.flowOutput = FlowOutput{}
 	flow.flowActions = make([]*FlowAction,0)
 	flow.Match = FlowMatch{}
-	flow.FlowID = 100 //just change this
 	return flow
 }
 
@@ -262,9 +260,12 @@ func (self *Flow) GetFlowInstructions() openflow13.Instruction {
 	case "gotoTbl":
 		actInstr = openflow13.NewInstrGotoTable(self.flowOutput.tblId)
 		log.Debugf("flow output type %s", self.flowOutput.outputType)
+	case "drop":
+		fallthrough
 	case "flood":
-		actInstr = openflow13.NewInstrApplyActions()
-		log.Debugf("flow output type %s", self.flowOutput.outputType)
+		fallthrough
+	case "normal":
+		fallthrough
 	case "outPort":
 		actInstr = openflow13.NewInstrApplyActions()
 		outputAct := openflow13.NewActionOutput(self.flowOutput.outPortNo)
@@ -274,122 +275,125 @@ func (self *Flow) GetFlowInstructions() openflow13.Instruction {
 		log.Fatalf("Unknown flow output type %s", self.flowOutput.outputType)
 	}
 
-	for _, flowAction := range self.flowActions {
-		switch flowAction.actionType {
-		case "setVlan":
-			// Push Vlan Tag action
-			pushVlanAction := openflow13.NewActionPushVlan(0x8100)
+	if len(self.flowActions) > 0 {
 
-			// Set Outer vlan tag field
-			vlanField := openflow13.NewVlanIdField(flowAction.vlanId, nil)
-			setVlanAction := openflow13.NewActionSetField(*vlanField)
+		for _, flowAction := range self.flowActions {
+			switch flowAction.actionType {
+			case "setVlan":
+				// Push Vlan Tag action
+				pushVlanAction := openflow13.NewActionPushVlan(0x8100)
 
-			// Prepend push vlan & setvlan actions to existing instruction
-			actInstr.AddAction(setVlanAction, true)
-			actInstr.AddAction(pushVlanAction, true)
-			log.Debugf("flow install. Added pushvlan action: %+v, setVlan actions: %+v",
-				pushVlanAction, setVlanAction)
+				// Set Outer vlan tag field
+				vlanField := openflow13.NewVlanIdField(flowAction.vlanId, nil)
+				setVlanAction := openflow13.NewActionSetField(*vlanField)
 
-		case "popVlan":
-			// Create pop vln action
-			popVlan := openflow13.NewActionPopVlan()
+				// Prepend push vlan & setvlan actions to existing instruction
+				actInstr.AddAction(setVlanAction, true)
+				actInstr.AddAction(pushVlanAction, true)
+				log.Debugf("flow install. Added pushvlan action: %+v, setVlan actions: %+v",
+					pushVlanAction, setVlanAction)
 
-			// Add it to instruction
-			actInstr.AddAction(popVlan, true)
-			log.Debugf("flow install. Added popVlan action: %+v", popVlan)
+			case "popVlan":
+				// Create pop vln action
+				popVlan := openflow13.NewActionPopVlan()
 
-		case "setMacDa":
-			// Set Outer MacDA field
-			macDaField := openflow13.NewEthDstField(flowAction.macAddr, nil)
-			setMacDaAction := openflow13.NewActionSetField(*macDaField)
+				// Add it to instruction
+				actInstr.AddAction(popVlan, true)
+				log.Debugf("flow install. Added popVlan action: %+v", popVlan)
 
-			// Add set macDa action to the instruction
-			actInstr.AddAction(setMacDaAction, true)
-			log.Debugf("flow install. Added setMacDa action: %+v", setMacDaAction)
+			case "setMacDa":
+				// Set Outer MacDA field
+				macDaField := openflow13.NewEthDstField(flowAction.macAddr, nil)
+				setMacDaAction := openflow13.NewActionSetField(*macDaField)
 
-		case "setMacSa":
-			// Set Outer MacSA field
-			macSaField := openflow13.NewEthSrcField(flowAction.macAddr, nil)
-			setMacSaAction := openflow13.NewActionSetField(*macSaField)
+				// Add set macDa action to the instruction
+				actInstr.AddAction(setMacDaAction, true)
+				log.Debugf("flow install. Added setMacDa action: %+v", setMacDaAction)
 
-			// Add set macDa action to the instruction
-			actInstr.AddAction(setMacSaAction, true)
-			log.Debugf("flow install. Added setMacSa Action: %+v", setMacSaAction)
+			case "setMacSa":
+				// Set Outer MacSA field
+				macSaField := openflow13.NewEthSrcField(flowAction.macAddr, nil)
+				setMacSaAction := openflow13.NewActionSetField(*macSaField)
 
-		case "setTunnelId":
-			// Set tunnelId field
-			tunnelIdField := openflow13.NewTunnelIdField(flowAction.tunnelId)
-			setTunnelAction := openflow13.NewActionSetField(*tunnelIdField)
+				// Add set macDa action to the instruction
+				actInstr.AddAction(setMacSaAction, true)
+				log.Debugf("flow install. Added setMacSa Action: %+v", setMacSaAction)
 
-			// Add set tunnel action to the instruction
-			actInstr.AddAction(setTunnelAction, true)
-			log.Debugf("flow install. Added setTunnelId Action: %+v", setTunnelAction)
+			case "setTunnelId":
+				// Set tunnelId field
+				tunnelIdField := openflow13.NewTunnelIdField(flowAction.tunnelId)
+				setTunnelAction := openflow13.NewActionSetField(*tunnelIdField)
 
-		case "setIPSa":
-			// Set IP src
-			ipSaField := openflow13.NewIpv4SrcField(flowAction.ipAddr, nil)
-			setIPSaAction := openflow13.NewActionSetField(*ipSaField)
+				// Add set tunnel action to the instruction
+				actInstr.AddAction(setTunnelAction, true)
+				log.Debugf("flow install. Added setTunnelId Action: %+v", setTunnelAction)
 
-			// Add set action to the instruction
-			actInstr.AddAction(setIPSaAction, true)
-			log.Debugf("flow install. Added setIPSa Action: %+v", setIPSaAction)
+			case "setIPSa":
+				// Set IP src
+				ipSaField := openflow13.NewIpv4SrcField(flowAction.ipAddr, nil)
+				setIPSaAction := openflow13.NewActionSetField(*ipSaField)
 
-		case "setIPDa":
-			// Set IP dst
-			ipDaField := openflow13.NewIpv4DstField(flowAction.ipAddr, nil)
-			setIPDaAction := openflow13.NewActionSetField(*ipDaField)
+				// Add set action to the instruction
+				actInstr.AddAction(setIPSaAction, true)
+				log.Debugf("flow install. Added setIPSa Action: %+v", setIPSaAction)
 
-			// Add set action to the instruction
-			actInstr.AddAction(setIPDaAction, true)
-			log.Debugf("flow install. Added setIPDa Action: %+v", setIPDaAction)
+			case "setIPDa":
+				// Set IP dst
+				ipDaField := openflow13.NewIpv4DstField(flowAction.ipAddr, nil)
+				setIPDaAction := openflow13.NewActionSetField(*ipDaField)
 
-		case "setDscp":
-			// Set DSCP field
-			ipDscpField := openflow13.NewIpDscpField(flowAction.dscp)
-			setIPDscpAction := openflow13.NewActionSetField(*ipDscpField)
+				// Add set action to the instruction
+				actInstr.AddAction(setIPDaAction, true)
+				log.Debugf("flow install. Added setIPDa Action: %+v", setIPDaAction)
 
-			// Add set action to the instruction
-			actInstr.AddAction(setIPDscpAction, true)
-			log.Debugf("flow install. Added setDscp Action: %+v", setIPDscpAction)
+			case "setDscp":
+				// Set DSCP field
+				ipDscpField := openflow13.NewIpDscpField(flowAction.dscp)
+				setIPDscpAction := openflow13.NewActionSetField(*ipDscpField)
 
-		case "setTCPSrc":
-			// Set TCP src
-			tcpSrcField := openflow13.NewTcpSrcField(flowAction.l4Port)
-			setTCPSrcAction := openflow13.NewActionSetField(*tcpSrcField)
+				// Add set action to the instruction
+				actInstr.AddAction(setIPDscpAction, true)
+				log.Debugf("flow install. Added setDscp Action: %+v", setIPDscpAction)
 
-			// Add set action to the instruction
-			actInstr.AddAction(setTCPSrcAction, true)
-			log.Debugf("flow install. Added setTCPSrc Action: %+v", setTCPSrcAction)
+			case "setTCPSrc":
+				// Set TCP src
+				tcpSrcField := openflow13.NewTcpSrcField(flowAction.l4Port)
+				setTCPSrcAction := openflow13.NewActionSetField(*tcpSrcField)
 
-		case "setTCPDst":
-			// Set TCP dst
-			tcpDstField := openflow13.NewTcpDstField(flowAction.l4Port)
-			setTCPDstAction := openflow13.NewActionSetField(*tcpDstField)
+				// Add set action to the instruction
+				actInstr.AddAction(setTCPSrcAction, true)
+				log.Debugf("flow install. Added setTCPSrc Action: %+v", setTCPSrcAction)
 
-			// Add set action to the instruction
-			actInstr.AddAction(setTCPDstAction, true)
-			log.Debugf("flow install. Added setTCPDst Action: %+v", setTCPDstAction)
+			case "setTCPDst":
+				// Set TCP dst
+				tcpDstField := openflow13.NewTcpDstField(flowAction.l4Port)
+				setTCPDstAction := openflow13.NewActionSetField(*tcpDstField)
 
-		case "setUDPSrc":
-			// Set UDP src
-			udpSrcField := openflow13.NewUdpSrcField(flowAction.l4Port)
-			setUDPSrcAction := openflow13.NewActionSetField(*udpSrcField)
+				// Add set action to the instruction
+				actInstr.AddAction(setTCPDstAction, true)
+				log.Debugf("flow install. Added setTCPDst Action: %+v", setTCPDstAction)
 
-			// Add set action to the instruction
-			actInstr.AddAction(setUDPSrcAction, true)
-			log.Debugf("flow install. Added setUDPSrc Action: %+v", setUDPSrcAction)
+			case "setUDPSrc":
+				// Set UDP src
+				udpSrcField := openflow13.NewUdpSrcField(flowAction.l4Port)
+				setUDPSrcAction := openflow13.NewActionSetField(*udpSrcField)
 
-		case "setUDPDst":
-			// Set UDP dst
-			udpDstField := openflow13.NewUdpDstField(flowAction.l4Port)
-			setUDPDstAction := openflow13.NewActionSetField(*udpDstField)
+				// Add set action to the instruction
+				actInstr.AddAction(setUDPSrcAction, true)
+				log.Debugf("flow install. Added setUDPSrc Action: %+v", setUDPSrcAction)
 
-			// Add set action to the instruction
-			actInstr.AddAction(setUDPDstAction, true)
-			log.Debugf("flow install. Added setUDPDst Action: %+v", setUDPDstAction)
+			case "setUDPDst":
+				// Set UDP dst
+				udpDstField := openflow13.NewUdpDstField(flowAction.l4Port)
+				setUDPDstAction := openflow13.NewActionSetField(*udpDstField)
 
-		default:
-			log.Fatalf("Unknown action type %s", flowAction.actionType)
+				// Add set action to the instruction
+				actInstr.AddAction(setUDPDstAction, true)
+				log.Debugf("flow install. Added setUDPDst Action: %+v", setUDPDstAction)
+
+			default:
+				log.Fatalf("Unknown action type %s", flowAction.actionType)
+			}
 		}
 	}
 	return actInstr
@@ -418,11 +422,22 @@ func (self *Flow) SetGotoTableAction(tblID uint8) {
 
 func (self *Flow) SetFloodAction() {
 	self.flowOutput.outputType = "flood"
+	self.flowOutput.outPortNo = openflow13.P_FLOOD
 }
 
 func (self *Flow) SetOutputPortAction(portNo uint32) {
 	self.flowOutput.outputType = "outPort"
 	self.flowOutput.outPortNo = portNo
+}
+
+func (self *Flow) SetNormalAction() {
+	self.flowOutput.outputType = "normal"
+	self.flowOutput.outPortNo = openflow13.P_NORMAL
+}
+
+func (self *Flow) SetDropAction() {
+	self.flowOutput.outputType = "drop"
+	self.flowOutput.outPortNo = openflow13.P_ANY
 }
 
 func (self *Flow) SetVlan(vlanId uint16) {
@@ -464,7 +479,6 @@ func (self *Flow) SetMacSa(macSa net.HardwareAddr) {
 	self.flowActions = append(self.flowActions, action)
 }
 
-// field should has one of the following values Src or Dst
 func (self *Flow) SetIPField(ip net.IP, field string) {
 	action := new(FlowAction)
 	action.ipAddr = ip
@@ -473,7 +487,7 @@ func (self *Flow) SetIPField(ip net.IP, field string) {
 	} else if field == "Dst" {
 		action.actionType = "setIPDa"
 	} else {
-		return errors.New("field not supported")
+		log.Fatalf("field not supported")
 	}
 
 	self.lock.Lock()
@@ -500,7 +514,7 @@ func (self *Flow) SetL4Field(port uint16, field string) {
 		action.actionType = "setUDPDst"
 		break
 	default:
-		return errors.New("field not supported")
+		log.Fatalf("field not supported")
 	}
 
 	self.lock.Lock()

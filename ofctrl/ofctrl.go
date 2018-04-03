@@ -31,7 +31,7 @@ type Controller struct {
 	consumer      ConsumerInterface
 	listener *net.TCPListener
 	wg       sync.WaitGroup
-	bridge   *OFSwitch
+	Bridge   *OFSwitch
 }
 
 // Create a new controller
@@ -124,8 +124,8 @@ func (c *Controller) handleConnection(conn net.Conn) {
 				log.Printf("Received ofp1.3 Switch feature response: %+v", *m)
 
 				// Create a new switch and handover the stream
-				if c.bridge == nil || !c.bridge.isConnected {
-					c.bridge = NewSwitch(stream, m.DPID, c.consumer)
+				if c.Bridge == nil {
+					c.Bridge = NewSwitch(stream, m.DPID, c.consumer)
 				}
 				// Let switch instance handle all future messages..
 				return
