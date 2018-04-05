@@ -59,17 +59,17 @@ type FlowAction struct {
 }
 
 type FlowOutput struct {
-	outputType string // Output type: "toController", "flood", "gotoTable" or "outPort"
-	outPortNo     uint32 // Output port number
-	tblId      uint8 // goto table id
+	OutputType string // Output type: "toController", "flood", "gotoTable" or "outPort"
+	OutPortNo     uint32 // Output port number
+	TblId      uint8 // goto table id
 }
 
 type Flow struct {
 	TableId     uint8         // FLow Table
 	Match       FlowMatch     // Fields to be matched
 	FlowID      uint64        // Unique ID for the flow
-	flowActions []*FlowAction // List of flow actions
-	flowOutput  FlowOutput;
+	FlowActions []*FlowAction // List of flow actions
+	FlowOutput  FlowOutput;
 	lock        sync.RWMutex  // lock for modifying flow state
 }
 
@@ -77,15 +77,15 @@ type Flow struct {
 func NewFlow(tblID uint8) *Flow {
 	flow := new(Flow)
 	flow.TableId = tblID
-	flow.flowOutput = FlowOutput{}
-	flow.flowActions = make([]*FlowAction,0)
+	flow.FlowOutput = FlowOutput{}
+	flow.FlowActions = make([]*FlowAction,0)
 	flow.Match = FlowMatch{}
 	return flow
 }
 
 
 // string key for the flow
-func (self *Flow) flowKey() string {
+func (self *Flow) FlowKey() string {
 	jsonVal, err := json.Marshal(self.Match)
 	if err != nil {
 		log.Errorf("Error forming flowkey for %+v. Err: %v", self, err)
@@ -249,17 +249,17 @@ var actInstr openflow13.Instruction
 
 func (self *Flow) GetFlowInstructions() openflow13.Instruction {
 
-	switch self.flowOutput.outputType {
+	switch self.FlowOutput.OutputType {
 	case "gotoCtrl":
 		actInstr = openflow13.NewInstrApplyActions()
 		outputAct := openflow13.NewActionOutput(openflow13.P_CONTROLLER)
 		// Dont buffer the packets being sent to controller
 		outputAct.MaxLen = openflow13.OFPCML_NO_BUFFER
 		actInstr.AddAction(outputAct, false)
-		log.Debugf("flow output type %s", self.flowOutput.outputType)
+		log.Debugf("flow output type %s", self.FlowOutput.OutputType)
 	case "gotoTbl":
-		actInstr = openflow13.NewInstrGotoTable(self.flowOutput.tblId)
-		log.Debugf("flow output type %s", self.flowOutput.outputType)
+		actInstr = openflow13.NewInstrGotoTable(self.FlowOutput.TblId)
+		log.Debugf("flow output type %s", self.FlowOutput.OutputType)
 	case "drop":
 		fallthrough
 	case "flood":
@@ -268,16 +268,16 @@ func (self *Flow) GetFlowInstructions() openflow13.Instruction {
 		fallthrough
 	case "outPort":
 		actInstr = openflow13.NewInstrApplyActions()
-		outputAct := openflow13.NewActionOutput(self.flowOutput.outPortNo)
+		outputAct := openflow13.NewActionOutput(self.FlowOutput.OutPortNo)
 		actInstr.AddAction(outputAct, false)
-		log.Debugf("flow output type %s", self.flowOutput.outputType)
+		log.Debugf("flow output type %s", self.FlowOutput.OutputType)
 	default:
-		log.Fatalf("Unknown flow output type %s", self.flowOutput.outputType)
+		log.Fatalf("Unknown flow output type %s", self.FlowOutput.OutputType)
 	}
 
-	if len(self.flowActions) > 0 {
+	if len(self.FlowActions) > 0 {
 
-		for _, flowAction := range self.flowActions {
+		for _, flowAction := range self.FlowActions {
 			switch flowAction.actionType {
 			case "setVlan":
 				// Push Vlan Tag action
@@ -400,7 +400,7 @@ func (self *Flow) GetFlowInstructions() openflow13.Instruction {
 }
 
 func (self *Flow) GetWriteMetaDataFlowInstruction() (*openflow13.InstrWriteMetadata, error) {
-	for _, flowAction := range self.flowActions {
+	for _, flowAction := range self.FlowActions {
 		switch flowAction.actionType {
 		case "setMetadata":
 			// Set Metadata instruction
@@ -412,32 +412,32 @@ func (self *Flow) GetWriteMetaDataFlowInstruction() (*openflow13.InstrWriteMetad
 }
 
 func (self *Flow) SetGotoControllerAction() {
-	self.flowOutput.outputType = "gotoCtrl"
+	self.FlowOutput.OutputType = "gotoCtrl"
 }
 
 func (self *Flow) SetGotoTableAction(tblID uint8) {
-	self.flowOutput.outputType = "gotoTbl"
-	self.flowOutput.tblId = tblID
+	self.FlowOutput.OutputType = "gotoTbl"
+	self.FlowOutput.TblId = tblID
 }
 
 func (self *Flow) SetFloodAction() {
-	self.flowOutput.outputType = "flood"
-	self.flowOutput.outPortNo = openflow13.P_FLOOD
+	self.FlowOutput.OutputType = "flood"
+	self.FlowOutput.OutPortNo = openflow13.P_FLOOD
 }
 
 func (self *Flow) SetOutputPortAction(portNo uint32) {
-	self.flowOutput.outputType = "outPort"
-	self.flowOutput.outPortNo = portNo
+	self.FlowOutput.OutputType = "outPort"
+	self.FlowOutput.OutPortNo = portNo
 }
 
 func (self *Flow) SetNormalAction() {
-	self.flowOutput.outputType = "normal"
-	self.flowOutput.outPortNo = openflow13.P_NORMAL
+	self.FlowOutput.OutputType = "normal"
+	self.FlowOutput.OutPortNo = openflow13.P_NORMAL
 }
 
 func (self *Flow) SetDropAction() {
-	self.flowOutput.outputType = "drop"
-	self.flowOutput.outPortNo = openflow13.P_ANY
+	self.FlowOutput.OutputType = "drop"
+	self.FlowOutput.OutPortNo = openflow13.P_ANY
 }
 
 func (self *Flow) SetVlan(vlanId uint16) {
@@ -447,7 +447,7 @@ func (self *Flow) SetVlan(vlanId uint16) {
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	self.flowActions = append(self.flowActions, action)
+	self.FlowActions = append(self.FlowActions, action)
 }
 
 func (self *Flow) PopVlan() {
@@ -456,7 +456,7 @@ func (self *Flow) PopVlan() {
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	self.flowActions = append(self.flowActions, action)
+	self.FlowActions = append(self.FlowActions, action)
 }
 
 func (self *Flow) SetMacDa(macDa net.HardwareAddr) {
@@ -466,7 +466,7 @@ func (self *Flow) SetMacDa(macDa net.HardwareAddr) {
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	self.flowActions = append(self.flowActions, action)
+	self.FlowActions = append(self.FlowActions, action)
 }
 
 func (self *Flow) SetMacSa(macSa net.HardwareAddr) {
@@ -476,7 +476,7 @@ func (self *Flow) SetMacSa(macSa net.HardwareAddr) {
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	self.flowActions = append(self.flowActions, action)
+	self.FlowActions = append(self.FlowActions, action)
 }
 
 func (self *Flow) SetIPField(ip net.IP, field string) {
@@ -492,7 +492,7 @@ func (self *Flow) SetIPField(ip net.IP, field string) {
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	self.flowActions = append(self.flowActions, action)
+	self.FlowActions = append(self.FlowActions, action)
 }
 
 // field should has one of the following values TCPSrc, TCPDst, UDPSrc or UDPDst
@@ -519,7 +519,7 @@ func (self *Flow) SetL4Field(port uint16, field string) {
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	self.flowActions = append(self.flowActions, action)
+	self.FlowActions = append(self.FlowActions, action)
 }
 
 func (self *Flow) SetMetadata(metadata, metadataMask uint64) {
@@ -530,7 +530,7 @@ func (self *Flow) SetMetadata(metadata, metadataMask uint64) {
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	self.flowActions = append(self.flowActions, action)
+	self.FlowActions = append(self.FlowActions, action)
 }
 
 func (self *Flow) SetTunnelId(tunnelId uint64) {
@@ -540,7 +540,7 @@ func (self *Flow) SetTunnelId(tunnelId uint64) {
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	self.flowActions = append(self.flowActions, action)
+	self.FlowActions = append(self.FlowActions, action)
 }
 
 func (self *Flow) SetDscp(dscp uint8) {
@@ -550,15 +550,15 @@ func (self *Flow) SetDscp(dscp uint8) {
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	self.flowActions = append(self.flowActions, action)
+	self.FlowActions = append(self.FlowActions, action)
 }
 
 func (self *Flow) UnsetDscp() {
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	for idx, act := range self.flowActions {
+	for idx, act := range self.FlowActions {
 		if act.actionType == "setDscp" {
-			self.flowActions = append(self.flowActions[:idx], self.flowActions[idx+1:]...)
+			self.FlowActions = append(self.FlowActions[:idx], self.FlowActions[idx+1:]...)
 		}
 	}
 }

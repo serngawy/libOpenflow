@@ -188,7 +188,7 @@ func (self *OFSwitch) InstallFlow(flow *Flow) {
 
 	log.Debugf("Sending ADD flowmod: %+v", flowMod)
 	self.Send(flowMod)
-	self.flows [flow.flowKey()] = flow
+	self.flows [flow.FlowKey()] = flow
 }
 
 func (self *OFSwitch) DeleteFlow(flow Flow) {
@@ -205,5 +205,5 @@ func (self *OFSwitch) DeleteFlow(flow Flow) {
 
 	log.Debugf("Sending DELETE flowmod: %+v", flowMod)
 	self.Send(flowMod)
-	delete(self.flows, flow.flowKey())
+	delete(self.flows, flow.FlowKey())
 }

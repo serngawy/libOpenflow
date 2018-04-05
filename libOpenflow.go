@@ -7,7 +7,7 @@ import (
 func main() {
 
 	// Main app test
-	var app ofctrl.OfApp
+	var app OfApp
 
 	// Create a controller
 	ctrler := ofctrl.NewController(&app)

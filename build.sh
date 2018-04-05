@@ -20,13 +20,13 @@ if [ ! -d "vendor/src" ] || [ "$Update" = "update" ]; then
 fi
 
 # Copy the source code to the gopath dir in order to compile the new changes.
-# For any reason of there is a new dir added, it should be copied also as below
+# For any reason if there is a new file/dir added, it should be copied also as below
 cp -rf common/* vendor/src/github.com/serngawy/libOpenflow/common/
 cp -rf ofctrl/* vendor/src/github.com/serngawy/libOpenflow/ofctrl/
 cp -rf openflow13/* vendor/src/github.com/serngawy/libOpenflow/openflow13/
 cp -rf protocol/* vendor/src/github.com/serngawy/libOpenflow/protocol/
 cp -rf util/* vendor/src/github.com/serngawy/libOpenflow/util/
-cp -rf libOpenflow.go vendor/src/github.com/serngawy/libOpenflow.go
+cp -rf *.go vendor/src/github.com/serngawy/
 
 go build -o bin/ofctrl
 
