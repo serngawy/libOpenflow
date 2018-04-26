@@ -41,23 +41,23 @@ func (app *OfApp) FlowRemoved(sw *ofctrl.OFSwitch, flowRemoved *openflow13.FlowR
 //Here you define the App Pipeline tables
 func (app *OfApp) initPipline() {
 	//ex: set normal action on table 0
-	//flow := ofctrl.NewFlow(0)
-	//flow.SetNormalAction()
-	//log.Printf("App: flow key: %s", flow.FlowKey())
-	//app.Switch.InstallFlow(flow)
-
-	// ex:match ip output port
 	flow := ofctrl.NewFlow(0)
-	ip := net.ParseIP("192.96.253.69")
-	flow.Match.IpDa = &ip
-	flow.FlowID = 100002
-	flow.Match.Ethertype = protocol.IPv4_MSG
-	flow.Match.IpProto = ofctrl.IP_PROTO_TCP
-	flow.Match.TcpDstPort = 8800
-	flow.Match.Priority = 100
-	flow.SetOutputPortAction(uint32(2))
-	flow.SetIPField(net.ParseIP("10.11.1.3"), "Dst")
-
+	flow.SetNormalAction()
 	log.Printf("App: flow key: %s", flow.FlowKey())
 	app.Switch.InstallFlow(flow)
+
+	// ex:match ip output port
+	//flow := ofctrl.NewFlow(0)
+	//ip := net.ParseIP("192.96.253.69")
+	//flow.Match.IpDa = &ip
+	//flow.FlowID = 100002
+	//flow.Match.Ethertype = protocol.IPv4_MSG
+	//flow.Match.IpProto = ofctrl.IP_PROTO_TCP
+	//flow.Match.TcpDstPort = 8800
+	//flow.Match.Priority = 100
+	//flow.SetOutputPortAction(uint32(2))
+	//flow.SetIPField(net.ParseIP("10.11.1.3"), "Dst")
+	//
+	//log.Printf("App: flow key: %s", flow.FlowKey())
+	//app.Switch.InstallFlow(flow)
 }
