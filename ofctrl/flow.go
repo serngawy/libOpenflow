@@ -242,6 +242,7 @@ func (self *Flow) GetMatchFields() openflow13.Match {
 		ofMatch.AddField(*tunnelIdField)
 	}
 
+	log.Println("Of Match are %v", ofMatch.Fields)
 	return *ofMatch
 }
 

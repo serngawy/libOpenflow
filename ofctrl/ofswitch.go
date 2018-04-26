@@ -157,9 +157,13 @@ func (self *OFSwitch) handleMessages(dpid net.HardwareAddr, msg util.Message) {
 		self.consumer.PacketRcvd(self, (*openflow13.PacketIn)(t))
 
 	case *openflow13.FlowRemoved:
+		log.Debugf("Flow removed: %+v", t)
+		self.consumer.FlowRemoved(self, (*openflow13.FlowRemoved)(t))
 
 	case *openflow13.PortStatus:
-		// FIXME: This needs to propagated to the app.
+		log.Debugf("Port Stats: %+v", t)
+		self.consumer.PortStatusChange(self, (*openflow13.PortStatus)(t))
+
 	case *openflow13.PacketOut:
 
 	case *openflow13.FlowMod:
@@ -186,7 +190,7 @@ func (self *OFSwitch) InstallFlow(flow *Flow) {
 	flowMod.Match = flow.GetMatchFields()
 	flowMod.AddInstruction(flow.GetFlowInstructions())
 
-	log.Debugf("Sending ADD flowmod: %+v", flowMod)
+	log.Debugf("Add flow: %+v", flowMod)
 	self.Send(flowMod)
 	self.flows [flow.FlowKey()] = flow
 }
@@ -203,7 +207,7 @@ func (self *OFSwitch) DeleteFlow(flow Flow) {
 	flowMod.OutPort = openflow13.P_ANY
 	flowMod.OutGroup = openflow13.OFPG_ANY
 
-	log.Debugf("Sending DELETE flowmod: %+v", flowMod)
+	log.Debugf("Delete flow: %+v", flowMod)
 	self.Send(flowMod)
 	delete(self.flows, flow.FlowKey())
 }

@@ -25,6 +25,12 @@ type ConsumerInterface interface {
 
 	// Controller received a multi-part reply from the switch
 	MultipartReply(sw *OFSwitch, rep *openflow13.MultipartReply)
+
+	// Port stats change UP/down
+	PortStatusChange(sw *OFSwitch, portStatus *openflow13.PortStatus)
+
+	// Flow removed, this could be helpful at the case many controllers manage the bridge
+	FlowRemoved(sw *OFSwitch, flowRemoved *openflow13.FlowRemoved)
 }
 
 type Controller struct {
