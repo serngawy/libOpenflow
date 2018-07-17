@@ -188,6 +188,8 @@ func (self *OFSwitch) InstallFlow(flow *Flow) {
 	flowMod.Priority = flow.Match.Priority
 	flowMod.Cookie = flow.FlowID
 	flowMod.Match = flow.GetMatchFields()
+	flowMod.IdleTimeout = flow.IdleTimeout
+	flowMod.HardTimeout = flow.HardTimeout
 	flowMod.AddInstruction(flow.GetFlowInstructions())
 
 	log.Debugf("Add flow: %+v", flowMod)

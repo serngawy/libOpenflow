@@ -9,22 +9,24 @@ import (
 
 // ofp_action_type 1.3
 const (
-	ActionType_Output     = 0
-	ActionType_CopyTtlOut = 11
-	ActionType_CopyTtlIn  = 12
-	ActionType_SetMplsTtl = 15
-	ActionType_DecMplsTtl = 16
-	ActionType_PushVlan   = 17
-	ActionType_PopVlan    = 18
-	ActionType_PushMpls   = 19
-	ActionType_PopMpls    = 20
-	ActionType_SetQueue   = 21
-	ActionType_Group      = 22
-	ActionType_SetNwTtl   = 23
-	ActionType_DecNwTtl   = 24
-	ActionType_SetField   = 25
-	ActionType_PushPbb    = 26
-	ActionType_PopPbb     = 27
+	ActionType_Output      = 0
+	ActionType_ReSubmit    = 1
+	ActionType_CopyTtlOut  = 11
+	ActionType_CopyTtlIn   = 12
+	ActionType_ReSubmitTbl = 14
+	ActionType_SetMplsTtl  = 15
+	ActionType_DecMplsTtl  = 16
+	ActionType_PushVlan    = 17
+	ActionType_PopVlan     = 18
+	ActionType_PushMpls    = 19
+	ActionType_PopMpls     = 20
+	ActionType_SetQueue    = 21
+	ActionType_Group       = 22
+	ActionType_SetNwTtl    = 23
+	ActionType_DecNwTtl    = 24
+	ActionType_SetField    = 25
+	ActionType_PushPbb     = 26
+	ActionType_PopPbb      = 27
 
 	ActionType_Experimenter = 0xffff
 )

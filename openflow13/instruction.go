@@ -97,10 +97,8 @@ func (instr *InstrGotoTable) MarshalBinary() (data []byte, err error) {
 
 func (instr *InstrGotoTable) UnmarshalBinary(data []byte) error {
 	instr.InstrHeader.UnmarshalBinary(data[:4])
-
 	instr.TableId = data[4]
 	copy(instr.pad, data[5:8])
-
 	return nil
 }
 

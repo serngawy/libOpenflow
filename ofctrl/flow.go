@@ -69,8 +69,10 @@ type Flow struct {
 	Match       FlowMatch     // Fields to be matched
 	FlowID      uint64        // Unique ID for the flow
 	FlowActions []*FlowAction // List of flow actions
-	FlowOutput  FlowOutput;
+	FlowOutput  FlowOutput
 	lock        sync.RWMutex  // lock for modifying flow state
+	IdleTimeout uint16 /* Idle time before discarding (seconds). */
+	HardTimeout uint16 /* Max time before discarding (seconds). */
 }
 
 
