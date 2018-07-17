@@ -2,10 +2,8 @@ package main
 
 import(
 	"github.com/serngawy/libOpenflow/openflow13"
-	"github.com/serngawy/libOpenflow/protocol"
 	ofctrl "github.com/serngawy/libOpenflow/ofctrl"
 	log "github.com/Sirupsen/logrus"
-	"net"
 )
 
 type OfApp struct {
