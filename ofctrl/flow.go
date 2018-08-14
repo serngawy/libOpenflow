@@ -69,7 +69,7 @@ type Flow struct {
 	Match       FlowMatch     // Fields to be matched
 	FlowID      uint64        // Unique ID for the flow
 	FlowActions []*FlowAction // List of flow actions
-	FlowOutput  FlowOutput
+	FlowOutput  []*FlowOutput
 	lock        sync.RWMutex  // lock for modifying flow state
 	IdleTimeout uint16 /* Idle time before discarding (seconds). */
 	HardTimeout uint16 /* Max time before discarding (seconds). */
@@ -79,7 +79,7 @@ type Flow struct {
 func NewFlow(tblID uint8) *Flow {
 	flow := new(Flow)
 	flow.TableId = tblID
-	flow.FlowOutput = FlowOutput{}
+	flow.FlowOutput = make([]*FlowOutput,0)
 	flow.FlowActions = make([]*FlowAction,0)
 	flow.Match = FlowMatch{}
 	return flow
@@ -251,30 +251,35 @@ var actInstr openflow13.Instruction
 
 func (self *Flow) GetFlowInstructions() openflow13.Instruction {
 
-	switch self.FlowOutput.OutputType {
-	case "gotoCtrl":
+	if len(self.FlowOutput) > 0 {
 		actInstr = openflow13.NewInstrApplyActions()
-		outputAct := openflow13.NewActionOutput(openflow13.P_CONTROLLER)
-		// Dont buffer the packets being sent to controller
-		outputAct.MaxLen = openflow13.OFPCML_NO_BUFFER
-		actInstr.AddAction(outputAct, false)
-		log.Debugf("flow output type %s", self.FlowOutput.OutputType)
-	case "gotoTbl":
-		actInstr = openflow13.NewInstrGotoTable(self.FlowOutput.TblId)
-		log.Debugf("flow output type %s", self.FlowOutput.OutputType)
-	case "drop":
-		fallthrough
-	case "flood":
-		fallthrough
-	case "normal":
-		fallthrough
-	case "outPort":
-		actInstr = openflow13.NewInstrApplyActions()
-		outputAct := openflow13.NewActionOutput(self.FlowOutput.OutPortNo)
-		actInstr.AddAction(outputAct, false)
-		log.Debugf("flow output type %s", self.FlowOutput.OutputType)
-	default:
-		log.Fatalf("Unknown flow output type %s", self.FlowOutput.OutputType)
+		for _, flowOut := range self.FlowOutput {
+			switch flowOut.OutputType {
+			case "gotoCtrl":
+				//actInstr = openflow13.NewInstrApplyActions()
+				outputAct := openflow13.NewActionOutput(openflow13.P_CONTROLLER)
+				// Don't buffer the packets being sent to controller
+				outputAct.MaxLen = openflow13.OFPCML_NO_BUFFER
+				actInstr.AddAction(outputAct, false)
+				log.Debugf("flow output type %s", flowOut.OutputType)
+			case "gotoTbl":
+				actInstr = openflow13.NewInstrGotoTable(flowOut.TblId)
+				log.Debugf("flow output type %s", flowOut.OutputType)
+			case "drop":
+				fallthrough
+			case "flood":
+				fallthrough
+			case "normal":
+				fallthrough
+			case "outPort":
+				//actInstr = openflow13.NewInstrApplyActions()
+				outputAct := openflow13.NewActionOutput(flowOut.OutPortNo)
+				actInstr.AddAction(outputAct, false)
+				log.Debugf("flow output type %s", flowOut.OutputType)
+			default:
+				log.Fatalf("Unknown flow output type %s", flowOut.OutputType)
+			}
+		}
 	}
 
 	if len(self.FlowActions) > 0 {
@@ -414,32 +419,56 @@ func (self *Flow) GetWriteMetaDataFlowInstruction() (*openflow13.InstrWriteMetad
 }
 
 func (self *Flow) SetGotoControllerAction() {
-	self.FlowOutput.OutputType = "gotoCtrl"
+	flowOut := new(FlowOutput)
+	flowOut.OutputType = "gotoCtrl"
+	self.lock.Lock()
+	defer self.lock.Unlock()
+	self.FlowOutput = append(self.FlowOutput, flowOut)
 }
 
 func (self *Flow) SetGotoTableAction(tblID uint8) {
-	self.FlowOutput.OutputType = "gotoTbl"
-	self.FlowOutput.TblId = tblID
+	flowOut := new(FlowOutput)
+	flowOut.OutputType = "gotoTbl"
+	flowOut.TblId = tblID
+	self.lock.Lock()
+	defer self.lock.Unlock()
+	self.FlowOutput = append(self.FlowOutput, flowOut)
 }
 
 func (self *Flow) SetFloodAction() {
-	self.FlowOutput.OutputType = "flood"
-	self.FlowOutput.OutPortNo = openflow13.P_FLOOD
+	flowOut := new(FlowOutput)
+	flowOut.OutputType = "flood"
+	flowOut.OutPortNo = openflow13.P_FLOOD
+	self.lock.Lock()
+	defer self.lock.Unlock()
+	self.FlowOutput = append(self.FlowOutput, flowOut)
 }
 
 func (self *Flow) SetOutputPortAction(portNo uint32) {
-	self.FlowOutput.OutputType = "outPort"
-	self.FlowOutput.OutPortNo = portNo
+	flowOut := new(FlowOutput)
+	flowOut.OutputType = "outPort"
+	flowOut.OutPortNo = portNo
+	self.lock.Lock()
+	defer self.lock.Unlock()
+	self.FlowOutput = append(self.FlowOutput, flowOut)
 }
 
 func (self *Flow) SetNormalAction() {
-	self.FlowOutput.OutputType = "normal"
-	self.FlowOutput.OutPortNo = openflow13.P_NORMAL
+	flowOut := new(FlowOutput)
+	flowOut.OutputType = "normal"
+	flowOut.OutPortNo = openflow13.P_NORMAL
+	self.lock.Lock()
+	defer self.lock.Unlock()
+	self.FlowOutput = append(self.FlowOutput, flowOut)
 }
 
 func (self *Flow) SetDropAction() {
-	self.FlowOutput.OutputType = "drop"
-	self.FlowOutput.OutPortNo = openflow13.P_ANY
+	flowOut := new(FlowOutput)
+	flowOut.OutputType = "drop"
+	flowOut.OutPortNo = openflow13.P_ANY
+	self.lock.Lock()
+	defer self.lock.Unlock()
+	self.FlowOutput = append(self.FlowOutput, flowOut)
 }
 
 func (self *Flow) SetVlan(vlanId uint16) {

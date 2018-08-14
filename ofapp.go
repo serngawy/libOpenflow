@@ -2,8 +2,10 @@ package main
 
 import(
 	"github.com/serngawy/libOpenflow/openflow13"
+	//"github.com/serngawy/libOpenflow/protocol"
 	ofctrl "github.com/serngawy/libOpenflow/ofctrl"
 	log "github.com/Sirupsen/logrus"
+	//"net"
 )
 
 type OfApp struct {
@@ -45,7 +47,7 @@ func (app *OfApp) initPipline() {
 	app.Switch.InstallFlow(flow)
 
 	// ex:match ip output port
-	//flow := ofctrl.NewFlow(0)
+	//flow = ofctrl.NewFlow(0)
 	//ip := net.ParseIP("192.96.253.69")
 	//flow.Match.IpDa = &ip
 	//flow.FlowID = 100002
@@ -54,8 +56,8 @@ func (app *OfApp) initPipline() {
 	//flow.Match.TcpDstPort = 8800
 	//flow.Match.Priority = 100
 	//flow.SetOutputPortAction(uint32(2))
+	//flow.SetGotoControllerAction()
 	//flow.SetIPField(net.ParseIP("10.11.1.3"), "Dst")
-	//
 	//log.Printf("App: flow key: %s", flow.FlowKey())
 	//app.Switch.InstallFlow(flow)
 }
