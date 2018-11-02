@@ -44,7 +44,7 @@ ofapp is the interface for Applcations "Consumers" in order to receiv events fro
     }
 # Build:
 
-    To build the binary execute the ./build.sh script, it will create ofctrl binary under the bin directory.
+    To build the binary execute the ./build.sh script, it will create ofctrl binary under the $GOPATH bin directory.
     To re-download the project dependancies use the following command:
         $ ./build.sh update 
 

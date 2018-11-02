@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/serngawy/libOpenflow/ofctrl"
+	"fmt"
 )
 
 func main() {
@@ -13,5 +14,6 @@ func main() {
 	ctrler := ofctrl.NewController(&app)
 
 	// start listening
+	fmt.Println("Starting OF controller at port 6633")
 	ctrler.Listen(":6633")
 }
