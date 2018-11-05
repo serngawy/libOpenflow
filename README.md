@@ -42,12 +42,17 @@ ofapp is the interface for Applcations "Consumers" in order to receiv events fro
       // start listening
       ctrler.Listen(":6633")
     }
+
 # Build:
 
-    To build the binary execute the ./build.sh script, it will create ofctrl binary under the $GOPATH bin directory.
-    To re-download the project dependancies use the following command:
-        $ ./build.sh update 
+We assume you already installed golang and dep. If not check the below links for more info
+- install golang
+ https://golang.org/doc/install
+- install dep
+ https://github.com/golang/dep/blob/master/docs/installation.md
 
-    Execute the ofctrl binary using the following command:
+To build the binary execute the ./build.sh script, it will create ofctrl binary under the $GOPATH bin directory.
+
+Execute the ofctrl binary using the following command:
         $ sudo ./ofctrl
 
